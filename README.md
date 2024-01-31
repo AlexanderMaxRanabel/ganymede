@@ -18,4 +18,6 @@ Beton is a new gemini protocol browser designed for quick sessions written in ru
 ## How to Install
 - clone the repository ```git clone https://github.com/AlexanderMaxRanabel/beton.git```
 - switch to director
-- compi
+- compile beton using ```cargo build --release```
+
+Binary should be in target/release now
