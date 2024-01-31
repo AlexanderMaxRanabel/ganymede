@@ -1,41 +1,44 @@
-extern crate termion;
-
-use colored::*;
-
 use std::{
     env,
-    io::{stdin, stdout, Write},
+    io::{stdout},
 };
 
-use termion::{
-    event::Key, 
-    input::TermRead, 
-    raw::IntoRawMode,
-    clear
+use crossterm::{
+    event::{self, KeyCode, KeyEventKind},
+    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+    ExecutableCommand,
 };
-//use trotter::{Actor, UserAgent};
-use trotter::parse::Gemtext;
 
-async fn key_events(url: String) -> anyhow::Result<()> {
-    let stdin = stdin();
-    let mut stdout = stdout().into_raw_mode().unwrap();
+use ratatui::{
+    prelude::{CrosstermBackend, Stylize, Terminal},
+    widgets::Paragraph,
+};
 
-    for c in stdin.keys() {
-        match c.unwrap() {
-            Key::Char('q') => break,
-            Key::Char('r') => {
-                write!(stdout, "{}", clear::All).unwrap();
-                stdout.flush().unwrap();
-                println!("{}", trotter::trot(url.clone()).await?.gemtext()?);
-            },
+async fn draw_ui(content: String) -> anyhow::Result<()> {
+    stdout().execute(EnterAlternateScreen)?;
+    enable_raw_mode()?;
+    let mut terminal = Terminal::new(CrosstermBackend::new(stdout()))?;
+    terminal.clear()?;
 
-            Key::Esc => break,
-            _ => {
-                println!("{}: Unknown operation", "Error".red());
-            },
+    loop {
+        terminal.draw(|frame| {
+            let area = frame.size();
+            frame.render_widget(Paragraph::new(content.clone()).white().on_black(), area);
+        })?;
+
+        if event::poll(std::time::Duration::from_millis(16))? {
+            if let event::Event::Key(key) = event::read()? {
+                if key.kind == KeyEventKind::Press
+                    && key.code == KeyCode::Char('q')
+                {
+                    break;
+                }
+            }
         }
     }
 
+    stdout().execute(LeaveAlternateScreen)?;
+    disable_raw_mode()?;
     Ok(())
 }
 
@@ -44,21 +47,18 @@ async fn main() -> anyhow::Result<()> {
     let args: Vec<String> = env::args().collect();
     if args.len() > 1 {
         let url = args.get(1).cloned().unwrap_or_else(|| {
-            println!("{}: No url has been provided", "Error".red());
+            println!("{}: No url has been provided", colored::Colorize::red("Error"));
             std::process::exit(1);
         });
 
-        //let requester = Actor::default().user_agent(UserAgent::Indexer);
-        //let actor_request = requester.get(url.clone()).await.unwrap();
         let gem_res = trotter::trot(url.clone()).await?.gemtext()?;
 
-        let gemtext = Gemtext::parse(&gem_res);
-        println!("{gemtext:#?}");
+        println!("{}", gem_res);
 
-        let _key_task_handler = tokio::spawn(key_events(url.clone()));
-        _key_task_handler.await??;
+        let draw_ui_handler = tokio::spawn(draw_ui(gem_res.clone()));
+        draw_ui_handler.await??;
     } else {
-        println!("{}: No Argument Nor Gemini URL provided", "Error".red());
+        println!("{}: No Argument Nor Gemini URL provided", colored::Colorize::red("Error"));
     }
 
     Ok(())
