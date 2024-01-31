@@ -9,7 +9,6 @@ edition = "2021"
 trotter = "0.6.0"
 tokio = { version = "1.35.1", features = ["full"] }
 colored = "2.1.0"
-clap = "4.4.18"
 anyhow = "1.0.79"
 ratatui = "0.25.0"
 crossterm = "0.27.0"

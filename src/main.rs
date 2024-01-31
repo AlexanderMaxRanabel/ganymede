@@ -1,7 +1,4 @@
-use std::{
-    env,
-    io::{stdout},
-};
+use std::{env, io::stdout};
 
 use crossterm::{
     event::{self, KeyCode, KeyEventKind},
@@ -28,10 +25,16 @@ async fn draw_ui(content: String) -> anyhow::Result<()> {
 
         if event::poll(std::time::Duration::from_millis(16))? {
             if let event::Event::Key(key) = event::read()? {
-                if key.kind == KeyEventKind::Press
-                    && key.code == KeyCode::Char('q')
-                {
+                if key.kind == KeyEventKind::Press && key.code == KeyCode::Char('q') {
                     break;
+                } else if key.kind == KeyEventKind::Press && key.code == KeyCode::Char('r') {
+                    terminal.draw(|frame| {
+                        let area = frame.size();
+                        frame.render_widget(
+                            Paragraph::new(content.clone()).white().on_black(),
+                            area,
+                        );
+                    })?;
                 }
             }
         }
@@ -47,7 +50,10 @@ async fn main() -> anyhow::Result<()> {
     let args: Vec<String> = env::args().collect();
     if args.len() > 1 {
         let url = args.get(1).cloned().unwrap_or_else(|| {
-            println!("{}: No url has been provided", colored::Colorize::red("Error"));
+            println!(
+                "{}: No url has been provided",
+                colored::Colorize::red("Error")
+            );
             std::process::exit(1);
         });
 
@@ -58,7 +64,10 @@ async fn main() -> anyhow::Result<()> {
         let draw_ui_handler = tokio::spawn(draw_ui(gem_res.clone()));
         draw_ui_handler.await??;
     } else {
-        println!("{}: No Argument Nor Gemini URL provided", colored::Colorize::red("Error"));
+        println!(
+            "{}: No Argument Nor Gemini URL provided",
+            colored::Colorize::red("Error")
+        );
     }
 
     Ok(())
