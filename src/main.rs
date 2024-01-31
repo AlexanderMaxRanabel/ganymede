@@ -7,8 +7,14 @@ use std::{
     io::{stdin, stdout, Write},
 };
 
-use termion::{event::Key, input::TermRead, raw::IntoRawMode};
+use termion::{
+    event::Key, 
+    input::TermRead, 
+    raw::IntoRawMode,
+    clear
+};
 //use trotter::{Actor, UserAgent};
+use trotter::parse::Gemtext;
 
 async fn key_events(url: String) -> anyhow::Result<()> {
     let stdin = stdin();
@@ -18,6 +24,7 @@ async fn key_events(url: String) -> anyhow::Result<()> {
         match c.unwrap() {
             Key::Char('q') => break,
             Key::Char('r') => {
+                write!(stdout, "{}", clear::All).unwrap();
                 stdout.flush().unwrap();
                 println!("{}", trotter::trot(url.clone()).await?.gemtext()?);
             },
@@ -43,10 +50,12 @@ async fn main() -> anyhow::Result<()> {
 
         //let requester = Actor::default().user_agent(UserAgent::Indexer);
         //let actor_request = requester.get(url.clone()).await.unwrap();
-        println!("{}", trotter::trot(url.clone()).await?.gemtext()?);
+        let gem_res = trotter::trot(url.clone()).await?.gemtext()?;
+
+        let gemtext = Gemtext::parse(&gem_res);
+        println!("{gemtext:#?}");
 
         let _key_task_handler = tokio::spawn(key_events(url.clone()));
-
         _key_task_handler.await??;
     } else {
         println!("{}: No Argument Nor Gemini URL provided", "Error".red());
