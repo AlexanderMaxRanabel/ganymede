@@ -2,7 +2,11 @@ use std::{env, io::stdout};
 
 use crossterm::{
     event::{self, KeyCode, KeyEventKind},
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+    execute,
+    terminal::{
+        disable_raw_mode, enable_raw_mode, Clear, ClearType, EnterAlternateScreen,
+        LeaveAlternateScreen,
+    },
     ExecutableCommand,
 };
 
@@ -11,7 +15,7 @@ use ratatui::{
     widgets::Paragraph,
 };
 
-async fn draw_ui(content: String) -> anyhow::Result<()> {
+async fn draw_ui(content: String, url: String) -> anyhow::Result<()> {
     stdout().execute(EnterAlternateScreen)?;
     enable_raw_mode()?;
     let mut terminal = Terminal::new(CrosstermBackend::new(stdout()))?;
@@ -27,14 +31,6 @@ async fn draw_ui(content: String) -> anyhow::Result<()> {
             if let event::Event::Key(key) = event::read()? {
                 if key.kind == KeyEventKind::Press && key.code == KeyCode::Char('q') {
                     break;
-                } else if key.kind == KeyEventKind::Press && key.code == KeyCode::Char('r') {
-                    terminal.draw(|frame| {
-                        let area = frame.size();
-                        frame.render_widget(
-                            Paragraph::new(content.clone()).white().on_black(),
-                            area,
-                        );
-                    })?;
                 }
             }
         }
@@ -59,9 +55,7 @@ async fn main() -> anyhow::Result<()> {
 
         let gem_res = trotter::trot(url.clone()).await?.gemtext()?;
 
-        println!("{}", gem_res);
-
-        let draw_ui_handler = tokio::spawn(draw_ui(gem_res.clone()));
+        let draw_ui_handler = tokio::spawn(draw_ui(gem_res.clone(), url.clone()));
         draw_ui_handler.await??;
     } else {
         println!(
