@@ -2,9 +2,8 @@ use std::{env, io::stdout};
 
 use crossterm::{
     event::{self, KeyCode, KeyEventKind},
-    execute,
     terminal::{
-        disable_raw_mode, enable_raw_mode, Clear, ClearType, EnterAlternateScreen,
+        disable_raw_mode, enable_raw_mode, EnterAlternateScreen,
         LeaveAlternateScreen,
     },
     ExecutableCommand,
@@ -15,7 +14,7 @@ use ratatui::{
     widgets::Paragraph,
 };
 
-async fn draw_ui(content: String, url: String) -> anyhow::Result<()> {
+async fn draw_ui(content: String) -> anyhow::Result<()> {
     stdout().execute(EnterAlternateScreen)?;
     enable_raw_mode()?;
     let mut terminal = Terminal::new(CrosstermBackend::new(stdout()))?;
