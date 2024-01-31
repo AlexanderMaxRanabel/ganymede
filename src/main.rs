@@ -54,7 +54,7 @@ async fn main() -> anyhow::Result<()> {
 
         let gem_res = trotter::trot(url.clone()).await?.gemtext()?;
 
-        let draw_ui_handler = tokio::spawn(draw_ui(gem_res.clone(), url.clone()));
+        let draw_ui_handler = tokio::spawn(draw_ui(gem_res.clone());
         draw_ui_handler.await??;
     } else {
         println!(
