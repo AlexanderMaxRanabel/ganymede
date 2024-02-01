@@ -1,4 +1,4 @@
-# beton
+# agorage
 A gemini browser.
 Beton is a new gemini protocol browser designed for quick sessions written in rust.
 
