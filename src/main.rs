@@ -68,6 +68,7 @@ async fn main() -> anyhow::Result<()> {
             "{}: No Argument Nor Gemini URL provided",
             colored::Colorize::red("Error")
         );
+        std::process::exit(1);
     }
 
     Ok(())
