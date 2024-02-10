@@ -1,11 +1,8 @@
 use std::{env, io::stdout};
 
 use crossterm::{
-    event::{self, KeyCode, KeyEventKind},
-    terminal::{
-        disable_raw_mode, enable_raw_mode, EnterAlternateScreen,
-        LeaveAlternateScreen,
-    },
+    event::{self, Event, KeyCode, KeyEvent, KeyEventKind},
+    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
     ExecutableCommand,
 };
 
@@ -13,6 +10,18 @@ use ratatui::{
     prelude::{CrosstermBackend, Stylize, Terminal},
     widgets::Paragraph,
 };
+
+pub fn read_char() -> std::io::Result<char> {
+    loop {
+        if let Event::Key(KeyEvent {
+            code: KeyCode::Char(c),
+            ..
+        }) = event::read()?
+        {
+            return Ok(c);
+        }
+    }
+}
 
 async fn mk_req(url: String) -> anyhow::Result<String> {
     let response = trotter::trot(url.clone()).await?.gemtext()?;
@@ -37,6 +46,21 @@ async fn draw_ui(mut content: String, url: String) -> anyhow::Result<()> {
                     break;
                 } else if key.kind == KeyEventKind::Press && key.code == KeyCode::Char('r') {
                     content = mk_req(url.clone()).await?
+                } else if key.kind == KeyEventKind::Press && key.code == KeyCode::Char('n') {
+                    let mut new_url = String::new();
+                    while let Event::Key(KeyEvent { code, .. }) = event::read()? {
+                        match code {
+                            KeyCode::Enter => {
+                                break;
+                            }
+                            KeyCode::Char(c) => {
+                                new_url.push(c);
+                            }
+                            _ => {}
+                        }
+                    }
+
+                    content = mk_req(new_url.clone()).await?;
                 }
             }
         }
