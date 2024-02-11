@@ -1,4 +1,4 @@
-use std::{io::stdout};
+use std::io::stdout;
 
 use crossterm::{
     event::{self, Event, KeyCode, KeyEvent, KeyEventKind},
@@ -7,8 +7,8 @@ use crossterm::{
 };
 
 use ratatui::{
-    prelude::{CrosstermBackend, Stylize, Terminal},
-    widgets::Paragraph,
+    prelude::*,
+    widgets::{*},
 };
 
 pub async fn mk_req(url: String) -> anyhow::Result<String> {
@@ -16,7 +16,7 @@ pub async fn mk_req(url: String) -> anyhow::Result<String> {
     Ok(response)
 }
 
-pub async fn draw_ui(mut content: String, url: String) -> anyhow::Result<()> {
+pub async fn draw_ui(mut content: String, mut url: String) -> anyhow::Result<()> {
     stdout().execute(EnterAlternateScreen)?;
     enable_raw_mode()?;
     let mut terminal = Terminal::new(CrosstermBackend::new(stdout()))?;
@@ -35,20 +35,21 @@ pub async fn draw_ui(mut content: String, url: String) -> anyhow::Result<()> {
                 } else if key.kind == KeyEventKind::Press && key.code == KeyCode::Char('r') {
                     content = mk_req(url.clone()).await?
                 } else if key.kind == KeyEventKind::Press && key.code == KeyCode::Char('n') {
-                    let mut new_url = String::new();
+                    let mut new_url_vec = String::new();
                     while let Event::Key(KeyEvent { code, .. }) = event::read()? {
                         match code {
                             KeyCode::Enter => {
                                 break;
                             }
                             KeyCode::Char(c) => {
-                                new_url.push(c);
+                                new_url_vec.push(c);
                             }
                             _ => {}
                         }
                     }
 
-                    content = mk_req(new_url.clone()).await?;
+                    url = new_url_vec.join("");
+                    content = mk_req(url.clone()).await?;
                 }
             }
         }
