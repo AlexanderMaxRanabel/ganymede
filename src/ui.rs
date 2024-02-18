@@ -6,10 +6,7 @@ use crossterm::{
     ExecutableCommand,
 };
 
-use ratatui::{
-    prelude::*,
-    widgets::{*},
-};
+use ratatui::{prelude::*, widgets::*};
 
 pub async fn mk_req(url: String) -> anyhow::Result<String> {
     let response = trotter::trot(url.clone()).await?.gemtext()?;
@@ -30,26 +27,39 @@ pub async fn draw_ui(mut content: String, mut url: String) -> anyhow::Result<()>
 
         if event::poll(std::time::Duration::from_millis(16))? {
             if let event::Event::Key(key) = event::read()? {
-                if key.kind == KeyEventKind::Press && key.code == KeyCode::Char('q') {
-                    break;
-                } else if key.kind == KeyEventKind::Press && key.code == KeyCode::Char('r') {
-                    content = mk_req(url.clone()).await?
-                } else if key.kind == KeyEventKind::Press && key.code == KeyCode::Char('n') {
-                    let mut new_url_vec = String::new();
-                    while let Event::Key(KeyEvent { code, .. }) = event::read()? {
-                        match code {
-                            KeyCode::Enter => {
-                                break;
+                if key.kind == KeyEventKind::Press {
+                    match key.code {
+                        KeyCode::Char('q') => {
+                            break;
+                        }
+
+                        KeyCode::Char('r') => {
+                            content = mk_req(url.clone()).await?;
+                        }
+
+                        KeyCode::Char('n') => {
+                            let mut new_url_vec = String::new();
+                            while let Event::Key(KeyEvent { code, .. }) = event::read()? {
+                                match code {
+                                    KeyCode::Enter => {
+                                        break;
+                                    }
+                                    KeyCode::Char(c) => {
+                                        new_url_vec.push(c);
+                                    }
+                                    _ => {}
+                                }
                             }
-                            KeyCode::Char(c) => {
-                                new_url_vec.push(c);
-                            }
-                            _ => {}
+
+                            url = new_url_vec.chars().collect();
+                            content = mk_req(url.clone()).await?;
+                        }
+
+                        _ => {
+                            println!("{}: Unknown Operation", colored::Colorize::red("Error"));
+                            break;
                         }
                     }
-
-                    url = new_url_vec.join("");
-                    content = mk_req(url.clone()).await?;
                 }
             }
         }
