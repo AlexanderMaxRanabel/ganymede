@@ -1,6 +1,6 @@
-# agorage
+# ganymede
 A gemini browser.
-Beton is a new gemini protocol browser designed for quick sessions written in rust.
+ganymede is a new gemini protocol browser designed for quick sessions written in rust.
 
 ## OS Support
 - Windows: Unsupported

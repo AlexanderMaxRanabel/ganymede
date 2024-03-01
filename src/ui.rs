@@ -38,23 +38,22 @@ pub async fn draw_ui(mut content: String, mut url: String) -> anyhow::Result<()>
                         }
 
                         KeyCode::Char('n') => {
-                            let mut new_url_vec = String::new();
+                            let mut new_url = String::new();
                             while let Event::Key(KeyEvent { code, .. }) = event::read()? {
                                 match code {
                                     KeyCode::Enter => {
                                         break;
                                     }
                                     KeyCode::Char(c) => {
-                                        new_url_vec.push(c);
+                                        new_url.push(c);
                                     }
                                     _ => {}
                                 }
                             }
 
-                            url = new_url_vec.chars().collect();
+                            url = new_url.chars().collect();
                             content = mk_req(url.clone()).await?;
                         }
-
                         _ => {
                             println!("{}: Unknown Operation", colored::Colorize::red("Error"));
                             break;
