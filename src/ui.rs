@@ -54,6 +54,7 @@ pub async fn draw_ui(mut content: String, mut url: String) -> anyhow::Result<()>
                             url = new_url.chars().collect();
                             content = mk_req(url.clone()).await?;
                         }
+
                         _ => {
                             println!("{}: Unknown Operation", colored::Colorize::red("Error"));
                             break;
