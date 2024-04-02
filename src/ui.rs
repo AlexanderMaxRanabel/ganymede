@@ -12,20 +12,7 @@ pub async fn mk_req(url: String) -> anyhow::Result<String> {
     let response = trotter::trot(url.clone()).await?.gemtext()?;
     Ok(response)
 }
-
-pub async fn gemtext_parser(content: &str) -> Vec<&str> {
-    let parsed_content: Vec<&str> = content.lines().collect();
-}
-
-pub async fn gemtext_restructurer(gemtext: Vec<&str>) -> (Vec<&str>, Vec<&str>) {
-    for line in &gemtext {
-        let tokens: Vec<&str> = line.split_whitespace().collect();
-        if tokens[0] == "=>" {
-            
-        }
-    }
-}
-
+""
 pub async fn draw_ui(mut content: String, mut url: String) -> anyhow::Result<()> {
     stdout().execute(EnterAlternateScreen)?;
     enable_raw_mode()?;
@@ -66,11 +53,6 @@ pub async fn draw_ui(mut content: String, mut url: String) -> anyhow::Result<()>
 
                             url = new_url.chars().collect();
                             content = mk_req(url.clone()).await?;
-                        }
-
-                        KeyCode::Char('g') => {
-                            let parsed: Vec<&str> = gemtext_parser(content.as_str());
-                            content = parsed.to_string();
                         }
 
                         _ => {
