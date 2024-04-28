@@ -1,3 +1,4 @@
+mod gemtext_parse;
 mod ui;
 use std::env;
 
