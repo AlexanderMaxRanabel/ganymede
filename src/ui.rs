@@ -10,8 +10,16 @@ use ratatui::{prelude::*, widgets::*};
 
 use crate::gemtext_parse;
 
+use trotter::{Actor, UserAgent};
+
 pub async fn mk_req(url: String) -> anyhow::Result<String> {
-    let response = trotter::trot(url.clone()).await?.gemtext()?;
+    let requester = Actor::default()
+        .user_agent(UserAgent::Webproxy);
+
+    let response = requester.get(url)
+        .await?
+        .gemtext()?;
+
     Ok(response)
 }
 
@@ -22,7 +30,7 @@ pub async fn draw_ui(mut content: String, mut url: String) -> anyhow::Result<()>
     terminal.clear()?;
 
     let mut links: Vec<String> = Vec::new();
-    (content, links) = gemtext_parse::gemtext_restructer(content);
+    (content, links) = gemtext_parse::gemtext_restructer(content, url.clone());
 
     loop {
         terminal.draw(|frame| {
@@ -40,7 +48,8 @@ pub async fn draw_ui(mut content: String, mut url: String) -> anyhow::Result<()>
 
                         KeyCode::Char('r') => {
                             content = mk_req(url.clone()).await?;
-                            (content, links) = gemtext_parse::gemtext_restructer(content);
+                            (content, links) =
+                                gemtext_parse::gemtext_restructer(content, url.clone());
                         }
 
                         KeyCode::Char('n') => {
@@ -59,12 +68,13 @@ pub async fn draw_ui(mut content: String, mut url: String) -> anyhow::Result<()>
 
                             url = new_url.chars().collect();
                             content = mk_req(url.clone()).await?;
-                            (content, links) = gemtext_parse::gemtext_restructer(content);
+                            (content, links) =
+                                gemtext_parse::gemtext_restructer(content, url.clone());
                         }
 
                         KeyCode::Char('g') => {
                             let mut nonusize_link_address = String::new();
-                            while let Event::Key(KeyEvent { code, ..}) = event::read()? {
+                            while let Event::Key(KeyEvent { code, .. }) = event::read()? {
                                 match code {
                                     KeyCode::Enter => {
                                         break;
@@ -76,14 +86,24 @@ pub async fn draw_ui(mut content: String, mut url: String) -> anyhow::Result<()>
                                 }
                             }
 
-                            let link_address: usize = nonusize_link_address.parse().expect("Cannot convert");
+                            let link_address: usize =
+                                nonusize_link_address.parse().expect("Cannot convert");
                             let link = links.get(link_address).unwrap_or_else(|| {
                                 content = "FATAL ERROR: Link from vec is unreachable".to_string();
                                 std::process::exit(1);
                             });
 
-                            content = mk_req(link.clone()).await?;
-                            (content, links) = gemtext_parse::gemtext_restructer(content); 
+                            if link.starts_with("https://") | link.starts_with("http://") {
+                                match open::that(link.clone()) {
+                                    Ok(()) => continue,
+                                    Err(_err) => std::process::exit(1),
+                                }
+                            } else {
+                                content = mk_req(link.clone()).await?;
+                            }
+
+                            (content, links) =
+                                gemtext_parse::gemtext_restructer(content, url.clone());
                         }
 
                         _ => {
