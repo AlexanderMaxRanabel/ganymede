@@ -1,6 +1,9 @@
-pub fn link_fixer(link: String, domain: String) -> String {
+pub fn link_fixer(link: String, mut domain: String) -> String {
     let mut new_link: String = String::new();
     if link.starts_with("/") {
+        if domain.ends_with("/") {
+            domain.pop();
+        }
         new_link = format!("{}{}{}", "gemini://", domain, link);
     }
     return new_link;
@@ -17,7 +20,6 @@ pub fn gemtext_restructer(mut content: String, url: String) -> (String, Vec<Stri
 
         if let Some(token_start) = tokens.get(0) {
             if token_start == "=>" && tokens.len() > 1 {
-                let mut link = tokens[1].clone();
                 let mut link = tokens.get(1).cloned().unwrap_or_else(|| {
                     println!("{}: No link has been found in tokens: {:?}", colored::Colorize::red("Error"), tokens);
                     std::process::exit(1);
