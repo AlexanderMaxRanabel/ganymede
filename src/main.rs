@@ -1,5 +1,7 @@
 mod gemtext_parse;
+mod links;
 mod ui;
+
 use std::env;
 
 #[tokio::main]

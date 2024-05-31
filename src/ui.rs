@@ -30,8 +30,8 @@ pub async fn draw_ui(mut content: String, mut url: String) -> anyhow::Result<()>
     let mut terminal = Terminal::new(CrosstermBackend::new(stdout()))?;
     terminal.clear()?;
 
-    let mut links: Vec<String> = Vec::new();
-    (content, links) = gemtext_parse::gemtext_restructer(content, url.clone());
+    let mut links: Vec<String>;
+    (content, links) = gemtext_parse::gemtext_restructer(content, url.clone()).await?;
 
     loop {
         terminal.draw(|frame| {
@@ -50,7 +50,7 @@ pub async fn draw_ui(mut content: String, mut url: String) -> anyhow::Result<()>
                         KeyCode::Char('r') => {
                             content = mk_req(url.clone()).await?;
                             (content, links) =
-                                gemtext_parse::gemtext_restructer(content, url.clone());
+                                gemtext_parse::gemtext_restructer(content, url.clone()).await?;
                         }
 
                         KeyCode::Char('n') => {
@@ -70,7 +70,7 @@ pub async fn draw_ui(mut content: String, mut url: String) -> anyhow::Result<()>
                             url = new_url.chars().collect();
                             content = mk_req(url.clone()).await?;
                             (content, links) =
-                                gemtext_parse::gemtext_restructer(content, url.clone());
+                                gemtext_parse::gemtext_restructer(content, url.clone()).await?;
                         }
 
                         KeyCode::Char('g') => {
@@ -104,7 +104,7 @@ pub async fn draw_ui(mut content: String, mut url: String) -> anyhow::Result<()>
                             }
 
                             (content, links) =
-                                gemtext_parse::gemtext_restructer(content, url.clone());
+                                gemtext_parse::gemtext_restructer(content, url.clone()).await?;
                         }
 
                         _ => {
