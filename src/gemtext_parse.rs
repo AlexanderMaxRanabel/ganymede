@@ -1,6 +1,9 @@
 use crate::links;
 
-pub async fn gemtext_restructer(mut content: String, url: String) -> anyhow::Result<(String, Vec<String>)> {
+pub async fn gemtext_restructer(
+    mut content: String,
+    url: String,
+) -> anyhow::Result<(String, Vec<String>)> {
     let vectorized_content: Vec<&str> = content.lines().collect();
     let mut new_content: Vec<String> = Vec::new();
     let mut links: Vec<String> = Vec::new();
@@ -31,3 +34,8 @@ pub async fn gemtext_restructer(mut content: String, url: String) -> anyhow::Res
 
     Ok((content, links))
 }
+
+/*pub async fn gemtext_restructer_new(mut content: String, url: String) -> anyhow::Result<(String, Vec<String>)> {
+
+    Ok((content, links))
+}*/
