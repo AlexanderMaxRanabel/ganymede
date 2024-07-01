@@ -33,6 +33,8 @@ pub async fn draw_ui(mut content: String, mut url: String) -> anyhow::Result<()>
     let mut links: Vec<String>;
     (content, links) = gemtext_parse::gemtext_restructer(content, url.clone()).await?;
 
+    let mut backlink = url.clone();
+
     loop {
         terminal.draw(|frame| {
             let area = frame.size();
@@ -81,14 +83,19 @@ pub async fn draw_ui(mut content: String, mut url: String) -> anyhow::Result<()>
                                         break;
                                     }
                                     KeyCode::Char(c) => {
-                                        nonusize_link_address = c.to_string();
+                                        nonusize_link_address.push(c);
                                     }
                                     _ => {}
                                 }
                             }
 
-                            let link_address: usize =
+
+
+                            let u32_link_address: u32 =
                                 nonusize_link_address.parse().expect("Cannot convert");
+
+                            let link_address: usize = u32_link_address as usize;
+
                             let link = links.get(link_address).unwrap_or_else(|| {
                                 content = "FATAL ERROR: Link from vec is unreachable".to_string();
                                 std::process::exit(1);
@@ -100,11 +107,18 @@ pub async fn draw_ui(mut content: String, mut url: String) -> anyhow::Result<()>
                                     Err(_err) => std::process::exit(1),
                                 }
                             } else {
+                                backlink = url.to_string();
+                                url = link.to_string();
                                 content = mk_req(link.clone()).await?;
                             }
 
                             (content, links) =
                                 gemtext_parse::gemtext_restructer(content, url.clone()).await?;
+                        }
+
+                        KeyCode::Char('b') => {
+                            content = mk_req(backlink.clone()).await?;
+                            (content, links) = gemtext_parse::gemtext_restructer(content, url.clone()).await?;
                         }
 
                         _ => {
