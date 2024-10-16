@@ -10,7 +10,7 @@ use ratatui::{prelude::*, widgets::*};
 
 use crate::gemtext_parse;
 
-use trotter::{Actor, UserAgent};
+use trotter::{Actor, Titan, UserAgent};
 
 pub async fn mk_req(mut url: String) -> anyhow::Result<String> {
     if !url.ends_with("/") {
@@ -22,6 +22,10 @@ pub async fn mk_req(mut url: String) -> anyhow::Result<String> {
     let response = requester.get(url).await?.gemtext()?;
 
     Ok(response)
+}
+
+pub async fn mk_titan(mut url: String) -> anyhow::Result<String> {
+    Ok("titan_test".to_string())
 }
 
 pub async fn draw_ui(mut content: String, mut url: String) -> anyhow::Result<()> {
@@ -38,7 +42,19 @@ pub async fn draw_ui(mut content: String, mut url: String) -> anyhow::Result<()>
     loop {
         terminal.draw(|frame| {
             let area = frame.size();
-            frame.render_widget(Paragraph::new(content.clone()).white().on_black(), area);
+            
+            let browser_view = Paragraph::new(content.clone())
+                .wrap(Wrap { trim: true })
+                .style(Style::new().white())
+                .block(
+                    Block::new()
+                        .title(url.clone())
+                        .title_style(Style::new().white().bold())
+                        .borders(Borders::ALL)
+                        .border_style(Style::new().white()),
+                );
+
+            frame.render_widget(browser_view, area);
         })?;
 
         if event::poll(std::time::Duration::from_millis(16))? {
@@ -89,8 +105,6 @@ pub async fn draw_ui(mut content: String, mut url: String) -> anyhow::Result<()>
                                 }
                             }
 
-
-
                             let u32_link_address: u32 =
                                 nonusize_link_address.parse().expect("Cannot convert");
 
@@ -118,8 +132,11 @@ pub async fn draw_ui(mut content: String, mut url: String) -> anyhow::Result<()>
 
                         KeyCode::Char('b') => {
                             content = mk_req(backlink.clone()).await?;
-                            (content, links) = gemtext_parse::gemtext_restructer(content, url.clone()).await?;
+                            (content, links) =
+                                gemtext_parse::gemtext_restructer(content, url.clone()).await?;
                         }
+
+                        KeyCode::Char('t') => {}
 
                         _ => {
                             println!("{}: Unknown Operation", colored::Colorize::red("Error"));
