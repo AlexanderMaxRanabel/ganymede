@@ -1,6 +1,7 @@
 mod gemtext_parse;
 mod links;
 mod ui;
+mod requests;
 
 use std::env;
 
@@ -16,7 +17,7 @@ async fn main() -> anyhow::Result<()> {
             std::process::exit(1);
         });
 
-        let gem_res = ui::mk_req(url.clone()).await?;
+        let gem_res = requests::mk_req(url.clone()).await?;
 
         let draw_ui_handler = tokio::spawn(ui::draw_ui(gem_res.clone(), url.clone()));
         draw_ui_handler.await??;

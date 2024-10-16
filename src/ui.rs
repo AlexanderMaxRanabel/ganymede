@@ -8,25 +8,7 @@ use crossterm::{
 
 use ratatui::{prelude::*, widgets::*};
 
-use crate::gemtext_parse;
-
-use trotter::{Actor, Titan, UserAgent};
-
-pub async fn mk_req(mut url: String) -> anyhow::Result<String> {
-    if !url.ends_with("/") {
-        url = format!("{}/", url);
-    }
-
-    let requester = Actor::default().user_agent(UserAgent::Webproxy);
-
-    let response = requester.get(url).await?.gemtext()?;
-
-    Ok(response)
-}
-
-pub async fn mk_titan(mut url: String) -> anyhow::Result<String> {
-    Ok("titan_test".to_string())
-}
+use crate::{requests, gemtext_parse};
 
 pub async fn draw_ui(mut content: String, mut url: String) -> anyhow::Result<()> {
     stdout().execute(EnterAlternateScreen)?;
@@ -39,10 +21,12 @@ pub async fn draw_ui(mut content: String, mut url: String) -> anyhow::Result<()>
 
     let mut backlink = url.clone();
 
+    let mut new_url = String::new();
+
     loop {
         terminal.draw(|frame| {
             let area = frame.size();
-            
+
             let browser_view = Paragraph::new(content.clone())
                 .wrap(Wrap { trim: true })
                 .style(Style::new().white())
@@ -66,13 +50,12 @@ pub async fn draw_ui(mut content: String, mut url: String) -> anyhow::Result<()>
                         }
 
                         KeyCode::Char('r') => {
-                            content = mk_req(url.clone()).await?;
+                            content = requests::mk_req(url.clone()).await?;
                             (content, links) =
                                 gemtext_parse::gemtext_restructer(content, url.clone()).await?;
                         }
 
-                        KeyCode::Char('n') => {
-                            let mut new_url = String::new();
+                        KeyCode::Char('n') => { 
                             while let Event::Key(KeyEvent { code, .. }) = event::read()? {
                                 match code {
                                     KeyCode::Enter => {
@@ -86,7 +69,7 @@ pub async fn draw_ui(mut content: String, mut url: String) -> anyhow::Result<()>
                             }
 
                             url = new_url.chars().collect();
-                            content = mk_req(url.clone()).await?;
+                            content = requests::mk_req(url.clone()).await?;
                             (content, links) =
                                 gemtext_parse::gemtext_restructer(content, url.clone()).await?;
                         }
@@ -123,7 +106,7 @@ pub async fn draw_ui(mut content: String, mut url: String) -> anyhow::Result<()>
                             } else {
                                 backlink = url.to_string();
                                 url = link.to_string();
-                                content = mk_req(link.clone()).await?;
+                                content = requests::mk_req(link.clone()).await?;
                             }
 
                             (content, links) =
@@ -131,7 +114,7 @@ pub async fn draw_ui(mut content: String, mut url: String) -> anyhow::Result<()>
                         }
 
                         KeyCode::Char('b') => {
-                            content = mk_req(backlink.clone()).await?;
+                            content = requests::mk_req(backlink.clone()).await?;
                             (content, links) =
                                 gemtext_parse::gemtext_restructer(content, url.clone()).await?;
                         }
