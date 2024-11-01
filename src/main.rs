@@ -1,7 +1,7 @@
 mod gemtext_parse;
 mod links;
-mod ui;
 mod requests;
+mod ui;
 
 use std::env;
 

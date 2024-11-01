@@ -8,7 +8,7 @@ use crossterm::{
 
 use ratatui::{prelude::*, widgets::*};
 
-use crate::{requests, gemtext_parse};
+use crate::{gemtext_parse, requests};
 
 pub async fn draw_ui(mut content: String, mut url: String) -> anyhow::Result<()> {
     stdout().execute(EnterAlternateScreen)?;
@@ -25,7 +25,7 @@ pub async fn draw_ui(mut content: String, mut url: String) -> anyhow::Result<()>
 
     loop {
         terminal.draw(|frame| {
-            let area = frame.size();
+            /*let area = frame.size();
 
             let browser_view = Paragraph::new(content.clone())
                 .wrap(Wrap { trim: true })
@@ -36,9 +36,24 @@ pub async fn draw_ui(mut content: String, mut url: String) -> anyhow::Result<()>
                         .title_style(Style::new().white().bold())
                         .borders(Borders::ALL)
                         .border_style(Style::new().white()),
-                );
+                );*/
 
-            frame.render_widget(browser_view, area);
+            let layout = Layout::default()
+                .direction(Direction::Vertical)
+                .constraints(vec![Constraint::Percentage(75), Constraint::Percentage(25)])
+                .split(frame.size());
+
+            frame.render_widget(
+                Paragraph::new(content.clone()).block(Block::new().borders(Borders::ALL)),
+                layout[0],
+            );
+
+            frame.render_widget(
+                Paragraph::new(url.clone()).block(Block::new().borders(Borders::ALL)),
+                layout[1],
+            );
+
+            //frame.render_widget(browser_view, area);
         })?;
 
         if event::poll(std::time::Duration::from_millis(16))? {
@@ -55,7 +70,7 @@ pub async fn draw_ui(mut content: String, mut url: String) -> anyhow::Result<()>
                                 gemtext_parse::gemtext_restructer(content, url.clone()).await?;
                         }
 
-                        KeyCode::Char('n') => { 
+                        KeyCode::Char('n') => {
                             while let Event::Key(KeyEvent { code, .. }) = event::read()? {
                                 match code {
                                     KeyCode::Enter => {

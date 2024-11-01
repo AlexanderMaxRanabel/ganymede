@@ -15,4 +15,3 @@ pub async fn mk_req(mut url: String) -> anyhow::Result<String> {
 pub async fn mk_titan(mut url: String) -> anyhow::Result<String> {
     Ok("titan_test".to_string())
 }
-
